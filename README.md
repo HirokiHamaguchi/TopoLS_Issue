@@ -2,20 +2,20 @@
 
 Hello, I am Hiroki Hamaguchi, a PhD student at the University of Tokyo.
 
-Thank you for developing TopoLS. TopoLS has been very helpful for our research and we want to cite it in our paper.
+Thank you for developing TopoLS. TopoLS has been very helpful for our research, and we would like to cite it in our paper.
 
 However, I encountered the equivalence mismatch reproduced below and would appreciate your help investigating and fixing it.
 
-See also our repository made for this issue ([TopoLS_Issue](https://github.com/HirokiHamaguchi/TopoLS_Issue)).
+See also my repository made for this issue ([TopoLS_Issue](https://github.com/HirokiHamaguchi/TopoLS_Issue)).
 
 ## Issue
 
-An 8-qubit, 16-CNOT randomly generated circuit (see also `benchmark/generate.py` in [our repository](https://github.com/HirokiHamaguchi/TopoLS_Issue/blob/master/benchmark/generate.py)) fails equivalence after the official TopoLS export/loader workflow, although `BlockGraph.validate()` passes.
+An 8-qubit, 16-CNOT randomly generated circuit (see also `benchmark/generate.py` in [my repository](https://github.com/HirokiHamaguchi/TopoLS_Issue/blob/master/benchmark/generate.py)) fails equivalence after the official TopoLS export/loader workflow, although `BlockGraph.validate()` passes.
 
 ### Reproduction
 
-We provide a minimal reproduction of the issue.
-We conducted the reproduction on WSL2 with Python 3.13, and uv.
+I provide a minimal reproduction of the issue.
+I reproduced the issue on WSL2 with Python 3.13 and uv.
 
 Keep this folder beside the TopoLS checkout:
 
