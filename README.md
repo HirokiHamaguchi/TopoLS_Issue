@@ -1,23 +1,23 @@
-# CNOT-only circuit fails equivalence after export
+# CNOT-only circuit fails an equivalence check after export
 
 Hello, I am Hiroki Hamaguchi, a PhD student at the University of Tokyo.
 
 Thank you for developing TopoLS. TopoLS has been very helpful for our research, and we would like to cite it in our paper.
 
-However, I encountered the equivalence mismatch reproduced below and would appreciate your help investigating and fixing it.
+I encountered the equivalence mismatch described below and would appreciate your help investigating and resolving it.
 
 See also my repository made for this issue ([TopoLS_Issue](https://github.com/HirokiHamaguchi/TopoLS_Issue)).
 
 ## Issue
 
-An 8-qubit, 16-CNOT randomly generated circuit (see also `benchmark/generate.py` in [my repository](https://github.com/HirokiHamaguchi/TopoLS_Issue/blob/master/benchmark/generate.py)) fails equivalence after the official TopoLS export/loader workflow, although `BlockGraph.validate()` passes.
+A randomly generated 8-qubit circuit containing 16 CNOT gates (see [`benchmark/generate.py`](https://github.com/HirokiHamaguchi/TopoLS_Issue/blob/master/benchmark/generate.py)) fails an equivalence check after export and loading through the official TopoLS functions, although `BlockGraph.validate()` passes.
 
 ### Reproduction
 
-I provide a minimal reproduction of the issue.
+The following is a minimal reproduction of the issue.
 I reproduced the issue on WSL2 with Python 3.13 and uv.
 
-Keep this folder beside the TopoLS checkout:
+Place this folder alongside the TopoLS checkout:
 
 ```text
 TopoLS/
@@ -32,7 +32,7 @@ uv sync
 uv run reproduce.py
 ```
 
-`reproduce.py` ([link to the file](https://github.com/HirokiHamaguchi/TopoLS_Issue/blob/master/reproduce.py)) is as follows:
+The contents of [`reproduce.py`](https://github.com/HirokiHamaguchi/TopoLS_Issue/blob/master/reproduce.py) are as follows:
 
 ```python
 """Compile seed0.qasm and seed1.qasm and verify the official exports."""
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     assert all(results), "Exported BlockGraph is not equivalent to input QASM"
 ```
 
-The observed output is the following:
+The observed output is as follows:
 
 ```text
 === seed0 ===
@@ -118,7 +118,7 @@ This indicates that the exported BlockGraph for `seed1` is not equivalent to the
 ## Possible Fix
 
 With assistance from an AI coding assistant, I traced a possible cause to the ceiling lift in `EmbeddingState.reward()`.
-The lifted end of a branching X spider can become Z.
+The lifted endpoint of a branching X spider can become a Z spider.
 In the saved seed1 example, changing only that lifted ZX vertex back to X restored equivalence to the input circuit.
 
 I tried the following small guard in `src/topols/embedding/state.py`:
@@ -135,10 +135,10 @@ I tried the following small guard in `src/topols/embedding/state.py`:
                          ceiling_track[node]["type"]= 1 if self.node_type[node]!=1 else 0
 ```
 
-With this guard, input seeds 0-4 passed both BlockGraph validation and tensor equivalence, including the previously failing seed1. Still, seed5 failed with a duplicate `output_3` port-label error.
+With this guard, the circuits generated with input seeds 0-4 passed both BlockGraph validation and the tensor equivalence check, including the previously failing seed1 circuit. However, the seed5 circuit failed to load because of a duplicate `output_3` port label.
 
-Although I have some understanding of ZX spiders and checked the code, I am not confident that this is the correct fix. I have found the implementation difficult to follow and do not yet fully understand its behavior.
-I apologize if I have overlooked something, and would be grateful if you help investigate and fix the issue.
+Although I have some understanding of ZX spiders and have examined the code, I am not confident that this is the correct fix. I have found the implementation difficult to follow and do not yet fully understand its behavior.
+I apologize if I have overlooked something and would be grateful if you could help investigate and resolve the issue.
 
 ---
 
