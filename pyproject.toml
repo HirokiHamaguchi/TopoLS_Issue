@@ -1,0 +1,16 @@
+[project]
+name = "topols-issue"
+version = "0.1.0"
+description = "Repository to report the issue with TopoLS"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pandas>=2.3.3",
+    "pyzx==0.10.6",
+    "topols",
+    "tqdm>=4.70.1",
+    "tqec>=0.2.0",
+]
+
+[tool.uv.sources]
+topols = { path = "../TopoLS", editable = true }

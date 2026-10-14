@@ -1,3 +1,3 @@
 file_name,volume,space,time,    ,compilation_time,block_size,spread_num,zx_opt,dir_opt,length,seed_init,seed_step,time_bound,iter_num
-seed1,441,49,9,    ,43.636,10,0,1,1,3,0,5,3,10000
-seed1,441,49,9,    ,55.701,10,0,1,1,3,0,5,3,10000
+seed0,392,49,8,    ,30.443,10,0,1,1,3,0,5,3,10000
+seed1,441,49,9,    ,42.98,10,0,1,1,3,0,5,3,10000

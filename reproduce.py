@@ -3,6 +3,11 @@ from pathlib import Path
 import subprocess
 import sys
 
+import pyzx as zx
+from topols.export.bgraph import build_pipe_diagram, save_bigraph
+from topols.tools.pipe_sim import load_block_graph
+from tqec.interop.pyzx.positioned import PositionedZX
+
 
 def main(name):
     here = Path(__file__).resolve().parent
@@ -11,11 +16,6 @@ def main(name):
         sys.executable, str(here.parent / "TopoLS/docs/prog.py"),
         "-f", name, "-l", "3", "--engine", "python",
     ], cwd=here, check=True)
-
-    import pyzx as zx
-    from topols.export.bgraph import build_pipe_diagram, save_bigraph
-    from topols.tools.pipe_sim import load_block_graph
-    from tqec.interop.pyzx.positioned import PositionedZX
 
     nodes, edges = build_pipe_diagram(here / f"result/topols/{name}.pkl")
     exported = here / f"result/{name}.bgraph"

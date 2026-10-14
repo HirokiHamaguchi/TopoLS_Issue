@@ -16,36 +16,85 @@ TopoLS_Issue/
 
 ```sh
 cd TopoLS_Issue
-uv venv --python 3.13
-uv pip install -r requirements.txt
-uv pip install --no-deps -e ../TopoLS
-.venv/bin/python reproduce.py
+uv sync
+uv run reproduce.py
 ```
 
-Only dependencies used by this reproducer are installed. Rendering and Rust
-dependencies are omitted. No lattice_surgery code or precomputed pickle is needed.
+`reproduce.py` is the following:
 
-`reproduce.py` runs seed0 followed by seed1 using the official CLI with
-`-l 3 --engine python` and all other
-defaults, exports and loads the result using official functions, then compares
-the ZX tensors in logical-qubit port order, ignoring a global nonzero scalar.
+```python
+"""Compile seed0.qasm and seed1.qasm and verify the official exports."""
+from pathlib import Path
+import subprocess
+import sys
+
+import pyzx as zx
+from topols.export.bgraph import build_pipe_diagram, save_bigraph
+from topols.tools.pipe_sim import load_block_graph
+from tqec.interop.pyzx.positioned import PositionedZX
+
+
+def main(name):
+    here = Path(__file__).resolve().parent
+    print(f"=== {name} ===", flush=True)
+    subprocess.run([
+        sys.executable, str(here.parent / "TopoLS/docs/prog.py"),
+        "-f", name, "-l", "3", "--engine", "python",
+    ], cwd=here, check=True)
+
+    nodes, edges = build_pipe_diagram(here / f"result/topols/{name}.pkl")
+    exported = here / f"result/{name}.bgraph"
+    save_bigraph(exported, nodes, edges)
+    block = load_block_graph(exported)
+    block.validate()
+    positioned = PositionedZX.from_block_graph(block)
+    graph = positioned.g
+    expected = zx.Circuit.load(str(here / f"benchmark/{name}.qasm"))
+    graph.set_inputs(tuple(positioned.p2v[block.ports[f"input_{q}"]] for q in range(expected.qubits)))
+    graph.set_outputs(tuple(positioned.p2v[block.ports[f"output_{q}"]] for q in range(expected.qubits)))
+    zx.full_reduce(graph)
+    equivalent = zx.compare_tensors(expected, graph, preserve_scalar=False)
+    print(f"{name}: equivalent = {equivalent}", flush=True)
+    return equivalent
+
+
+if __name__ == "__main__":
+    # Check both inputs before reporting an equivalence failure.
+    results = [main(name) for name in ("seed0", "seed1")]
+    assert all(results), "Exported BlockGraph is not equivalent to input QASM"
+```
 
 Expected failure:
 
 ```text
+=== seed0 ===
+Executing seed0 benchmark.
+HTable: 0 same-qubit H, 0 cross-qubit H, 49 registered nodes
+Embedding progress:
+ 80%|███████████████████████████████████████████████████████████████████████▏                 | 4/5 [00:30<00:07,  7.61s/it]
+Engine: python
+x_length: 7.0 y_length: 7.0 z_length: 8
+Space-time volume: 392.0
+Time: 8
+Space: 49.0
+Compilation time: 30.44304585456848
+seed0: equivalent = True
+=== seed1 ===
+Executing seed1 benchmark.
+HTable: 0 same-qubit H, 0 cross-qubit H, 58 registered nodes
+Embedding progress:
+ 83%|██████████████████████████████████████████████████████████████████████████▏              | 5/6 [00:42<00:08,  8.60s/it]
+Engine: python
+x_length: 7.0 y_length: 7.0 z_length: 9
+Space-time volume: 441.0
+Time: 9
+Space: 49.0
+Compilation time: 42.97967457771301
+seed1: equivalent = False
+Traceback (most recent call last):
+  File "/home/hirok/University/TopoLS_Issue/reproduce.py", line 39, in <module>
+    assert all(results), "Exported BlockGraph is not equivalent to input QASM"
+           ~~~^^^^^^^^^
 AssertionError: Exported BlockGraph is not equivalent to input QASM
 ```
 
-TopoLS checkout: `e564d350a596cfea3227e09698733210e2e14dcf`.
-PyZX: `0.10.6`. TQEC: `0.2.0` (PyPI).
-Generated files are under `result/`. The verification assertion is in this
-reproducer; the TopoLS compilation itself completes.
-Reproduced from a fresh environment with Python 3.13.6; see `run.log`.
-
-## Comparison input
-
-`benchmark/seed0.qasm` uses the same generation rule with `random.Random(0)`.
-Both inputs contain 8 qubits and 16 CNOTs and are run with the same compiler
-settings, without command-line arguments. Each equivalence result is printed;
-the assertion is checked after both inputs have been processed.
-Seed0 has not yet been verified with this checkout.
