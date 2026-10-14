@@ -10,7 +10,7 @@ See also our repository made for this issue ([TopoLS_Issue](https://github.com/H
 
 ## Issue
 
-An 8-qubit, 16-CNOT randomly generated circuit (see also `benchmark/generate.py` in [our repository](https://github.com/HirokiHamaguchi/TopoLS_Issue/tree/master/benchmark/generate.py)) fails equivalence after the official TopoLS export/loader workflow, although `BlockGraph.validate()` passes.
+An 8-qubit, 16-CNOT randomly generated circuit (see also `benchmark/generate.py` in [our repository](https://github.com/HirokiHamaguchi/TopoLS_Issue/blob/master/benchmark/generate.py)) fails equivalence after the official TopoLS export/loader workflow, although `BlockGraph.validate()` passes.
 
 ### Reproduction
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     assert all(results), "Exported BlockGraph is not equivalent to input QASM"
 ```
 
-The expected output is the following:
+The observed output is the following:
 
 ```text
 === seed0 ===
@@ -135,7 +135,7 @@ I tried the following small guard in `src/topols/embedding/state.py`:
                          ceiling_track[node]["type"]= 1 if self.node_type[node]!=1 else 0
 ```
 
-With this guard, input seeds 0-4 passed both BlockGraph validation and tensor equivalence, including the previously failing seed1. (Still, there are some more errors in seeds 5-9, which I have not yet investigated.)
+With this guard, input seeds 0-4 passed both BlockGraph validation and tensor equivalence, including the previously failing seed1. Still, seed5 failed with a duplicate `output_3` port-label error.
 
 Although I have some understanding of ZX spiders and checked the code, I am not confident that this is the correct fix. I have found the implementation difficult to follow and do not yet fully understand its behavior.
 I apologize if I have overlooked something, and would be grateful if you help investigate and fix the issue.

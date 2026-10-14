@@ -1,24 +1,0 @@
-/mnt/c/Users/hirok/Documents/PartTimeJob/quantum/TopoLS_Issue/.venv/lib/python3.13/site-packages/pyzx/rewrite_rules/fuse_FE_rules.py:30: SyntaxWarning: invalid escape sequence '\m'
-  Let :math:`C_1` and :math:`C_2` be two circuits with respective noise models :math:`\mathcal{F}_1` and :math:`\mathcal{F}_2`.
-/mnt/c/Users/hirok/Documents/PartTimeJob/quantum/TopoLS_Issue/.venv/lib/python3.13/site-packages/pyzx/generate.py:769: SyntaxWarning: invalid escape sequence '\s'
-  P(dq) = 1/\sqrt{2*pi*sigma^2} * exp{-(dq-1)^2/(2*sigma^2)}
-/mnt/c/Users/hirok/Documents/PartTimeJob/quantum/TopoLS_Issue/.venv/lib/python3.13/site-packages/pyzx/simulation/decompositions/magic_5.py:3: SyntaxWarning: invalid escape sequence '\o'
-  for a T^{\otimes n} state.
-Executing seed1 benchmark.
-HTable: 0 same-qubit H, 0 cross-qubit H, 58 registered nodes
-Embedding progress:
-  0%|          | 0/6 [00:00<?, ?it/s] 17%|█▋        | 1/6 [00:07<00:38,  7.64s/it] 33%|███▎      | 2/6 [00:24<00:52, 13.19s/it] 50%|█████     | 3/6 [00:31<00:30, 10.13s/it] 67%|██████▋   | 4/6 [00:50<00:27, 13.75s/it] 83%|████████▎ | 5/6 [00:55<00:10, 10.66s/it] 83%|████████▎ | 5/6 [00:55<00:11, 11.14s/it]
-Engine: python
-x_length: 7.0 y_length: 7.0 z_length: 9
-Space-time volume: 441.0
-Time: 9
-Space: 49.0
-Compilation time: 55.70128583908081
-Traceback (most recent call last):
-  File "/mnt/c/Users/hirok/Documents/PartTimeJob/quantum/TopoLS_Issue/reproduce.py", line 35, in <module>
-    main()
-    ~~~~^^
-  File "/mnt/c/Users/hirok/Documents/PartTimeJob/quantum/TopoLS_Issue/reproduce.py", line 30, in main
-    assert zx.compare_tensors(expected, graph, preserve_scalar=False), "Exported BlockGraph is not equivalent to input QASM"
-           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: Exported BlockGraph is not equivalent to input QASM
