@@ -1,11 +1,21 @@
 # CNOT-only circuit fails equivalence after export
 
-An 8-qubit, 16-CNOT circuit fails equivalence after the official TopoLS
-export/loader workflow, although `BlockGraph.validate()` passes.
-The input uses Python `random.Random(1)`, drawing each ordered CNOT pair with
-`sample(range(8), 2)`. This input seed is separate from TopoLS's default search seed 0.
+Hello, I am Hiroki Hamaguchi, a PhD student at the University of Tokyo.
 
-## Reproduce (Linux / WSL, Python 3.13, uv)
+Thank you for developing TopoLS. TopoLS has been very helpful for our research and we want to cite it in our paper.
+
+However, I encountered the equivalence mismatch reproduced below and would appreciate your help investigating and fixing it.
+
+See also our repository made for this issue ([TopoLS_Issue](https://github.com/HirokiHamaguchi/TopoLS_Issue)).
+
+## Issue
+
+An 8-qubit, 16-CNOT randomly generated circuit (see also `benchmark/generate.py` in [our repository](https://github.com/HirokiHamaguchi/TopoLS_Issue/tree/master/benchmark/generate.py)) fails equivalence after the official TopoLS export/loader workflow, although `BlockGraph.validate()` passes.
+
+### Reproduction
+
+We provide a minimal reproduction of the issue.
+We conducted the reproduction on WSL2 with Python 3.13, and uv.
 
 Keep this folder beside the TopoLS checkout:
 
@@ -14,13 +24,15 @@ TopoLS/
 TopoLS_Issue/
 ```
 
+Then run the following commands:
+
 ```sh
 cd TopoLS_Issue
 uv sync
 uv run reproduce.py
 ```
 
-`reproduce.py` is the following:
+`reproduce.py` ([link to the file](https://github.com/HirokiHamaguchi/TopoLS_Issue/blob/master/reproduce.py)) is as follows:
 
 ```python
 """Compile seed0.qasm and seed1.qasm and verify the official exports."""
@@ -47,24 +59,27 @@ def main(name):
     save_bigraph(exported, nodes, edges)
     block = load_block_graph(exported)
     block.validate()
+
     positioned = PositionedZX.from_block_graph(block)
     graph = positioned.g
     expected = zx.Circuit.load(str(here / f"benchmark/{name}.qasm"))
     graph.set_inputs(tuple(positioned.p2v[block.ports[f"input_{q}"]] for q in range(expected.qubits)))
     graph.set_outputs(tuple(positioned.p2v[block.ports[f"output_{q}"]] for q in range(expected.qubits)))
     zx.full_reduce(graph)
+
+    # Official PyZX equality-verification example:
+    # https://pyzx.readthedocs.io/en/stable/notebooks/simplify.html#circuit-equality-verification
     equivalent = zx.compare_tensors(expected, graph, preserve_scalar=False)
     print(f"{name}: equivalent = {equivalent}", flush=True)
     return equivalent
 
 
 if __name__ == "__main__":
-    # Check both inputs before reporting an equivalence failure.
     results = [main(name) for name in ("seed0", "seed1")]
     assert all(results), "Exported BlockGraph is not equivalent to input QASM"
 ```
 
-Expected failure:
+The expected output is the following:
 
 ```text
 === seed0 ===
@@ -98,3 +113,33 @@ Traceback (most recent call last):
 AssertionError: Exported BlockGraph is not equivalent to input QASM
 ```
 
+This indicates that the exported BlockGraph for `seed1` is not equivalent to the input QASM circuit, even though `BlockGraph.validate()` passes.
+
+## Possible Fix
+
+With assistance from an AI coding assistant, I traced a possible cause to the ceiling lift in `EmbeddingState.reward()`.
+The lifted end of a branching X spider can become Z.
+In the saved seed1 example, changing only that lifted ZX vertex back to X restored equivalence to the input circuit.
+
+I tried the following small guard in `src/topols/embedding/state.py`:
+
+```diff
+--- a/src/topols/embedding/state.py
++++ b/src/topols/embedding/state.py
+@@ -720,3 +720,6 @@
+                     if ori_map[(last_dir, curr_type, self.node_type[node])] == 'k':
++                        # A branching endpoint must preserve the spider type.
++                        if self.output_connect[node] > 1:
++                            return None
+                         ceiling_track[node]["ori"] = ori_map[(last_dir, curr_type, 1 if self.node_type[node]!=1 else 0)]
+                         ceiling_track[node]["type"]= 1 if self.node_type[node]!=1 else 0
+```
+
+With this guard, input seeds 0-4 passed both BlockGraph validation and tensor equivalence, including the previously failing seed1. (Still, there are some more errors in seeds 5-9, which I have not yet investigated.)
+
+Although I have some understanding of ZX spiders and checked the code, I am not confident that this is the correct fix. I have found the implementation difficult to follow and do not yet fully understand its behavior.
+I apologize if I have overlooked something, and would be grateful if you help investigate and fix the issue.
+
+---
+
+Thank you for your time and consideration.
